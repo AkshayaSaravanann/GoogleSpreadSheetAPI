@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Draw GeoJSON points</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+<div id='map'> </div>
+<script>
+mapboxgl.accessToken ='pk.eyJ1IjoiYWtzaGF5YS1zYXJhdmFuYW4iLCJhIjoiY2plcWVrNzZ4MDZqazMzcGZweTNrODJsMyJ9.VGA7jt4as99kpgGfY6fNkw';
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v9',
+    center: [-77.0451,38.9519],
+    zoom: 11
+});
+map.on('click', function(e) {
+  var features = map.queryRenderedFeatures(e.point, {
+    layers: ['points'] // replace this with the name of the layer
+  });
+
+  if (!features.length) {
+    return;
+  }
+
+  var feature = features[0];
+
+  var popup = new mapboxgl.Popup({ offset: [0, -15] })
+    .setLngLat(feature.geometry.coordinates)
+    //.setHTML('<h3>' + feature.properties.title + '</h3><p>' + feature.properties.description + '</p>')
+    .setLngLat(feature.geometry.coordinates)
+    .addTo(map);
+});
+
+var distanceContainer = document.getElementById('distance');
+var geojson = {
+  "type": "FeatureCollection",
+  "features": []
+};
+/*var linestring = {
+    "type": "Feature",
+    "geometry": {
+        "type": "LineString",
+        "coordinates": []
+    }
+};*/
+
+map.on('load', function () {
+    map.addSource('geojson', {
+        "type": "geojson",
+        "data": geojson
+    });
+    /*map.addLayer({
+        id: 'points',
+        type: 'line',
+        source: 'geojson',
+        layout: {
+            'line-cap': 'round',
+            'line-join': 'round'
+        },
+        paint: {
+            'line-color': '#000',
+            'line-width': 2.5
+        },
+        filter: ['in', '$type', 'LineString']
+    });*/
+     map.addLayer({
+        id: 'points',
+        type: 'symbol',
+         source: {
+            "type": "geojson",
+            "data": "http://localhost:8899/route"
+            },
+            "layout": {
+            "icon-image": "restaurant-15",
+            //"text-field": "{title}",
+            //"text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+            //"text-offset": [0, 0.6],
+            //"text-anchor": "top"
+            "icon-allow-overlap" : true
+        }
+       //filter: ['==', "STN_TYPE", "NS"]
+    });
+
+      /* map.on('click', function(e) {
+        var features = map.queryRenderedFeatures(e.point, { layers: ['points'] });
+        
+        if (geojson.features.length > 1) geojson.features.pop();
+        // console.log(features.length);
+        var id = features[0].properties.OBJECTID;
+            var str = features[0].properties.STN_NO;
+            var num = str.match(/\d+/g).map(Number);
+        if (geojson.features.length) {
+            
+          // console.log(features[0]);
+            // geojson.features[1] = features.filter(function(point) {
+            //     // console.log(point.properties.id);
+            //     return point.properties.id !== id;
+            // });
+            geojson.features[1] = features[0];
+        }
+        else{     
+        geojson.features[0] = features[0];
+        }  
+      console.log(num);
+
+      console.log(geojson.features);
+        if (geojson.features.length > 1) {
+            linestring.geometry.coordinates = geojson.features.map(function(point) {
+                 return point.geometry.coordinates;   
+            });
+            geojson.features.push(linestring);
+        }
+        map.getSource('geojson').setData(geojson);
+    });*/
+});
+map.on('mouseenter', function (e) {
+    var features = map.queryRenderedFeatures(e.point);
+    map.getCanvas().style.cursor ='pointer';
+});
+</script>
+</body>
+</html>
